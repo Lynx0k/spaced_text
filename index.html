@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Spaced Text Generator</title>
+  <style>
+    :root {
+      --bg-main: #1b1b1f;
+      --bg-panel: #252529;
+      --border-soft: #3a3a3f;
+      --accent: #0b74ff;
+      --text-main: #f5f5f7;
+      --text-muted: #a1a1aa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: #070708;
+      color: var(--text-main);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 10px 14px;
+      gap: 10px;
+    }
+
+    .toolbar-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      background: #1b1b20;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 10px;
+    }
+
+    .toolbar-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 4px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      background: #202025;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      color: var(--text-main);
+      padding: 4px 6px;
+      font-size: 12px;
+      min-width: 50px;
+      outline: none;
+    }
+
+    input[type="number"] {
+      width: 60px;
+    }
+
+    input[type="text"] {
+      width: 160px;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 4px;
+    }
+
+    .checkbox-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: #202025;
+      color: var(--text-main);
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: #0a6ad6;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:hover {
+      background: #2b2b30;
+    }
+
+    .btn-primary:hover {
+      background: #0a6ad6;
+    }
+
+    .btn-danger {
+      border-color: #ff453a;
+      color: #ff453a;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 160px;
+      height: 4px;
+      border-radius: 999px;
+      background: #3a3a3f;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 1px solid #ffffff;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 1px solid #ffffff;
+    }
+
+    .panels {
+      margin-top: 2px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-header,
+    .panel-footer {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-header {
+      justify-content: space-between;
+      background: #1f1f24;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .panel-stats {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .panel-body {
+      flex: 1;
+      padding: 0;
+      display: flex;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 10px 12px;
+      background: #15151a;
+      /* flat, no gradient */
+      color: var(--text-main);
+      font-size: 18px;
+      /* big font size */
+      line-height: 1.6;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    .panel-footer {
+      justify-content: space-between;
+      background: #1f1f24;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .panel-footer-left,
+    .panel-footer-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .panel-fullscreen {
+      position: fixed;
+      inset: 10px;
+      z-index: 999;
+      width: calc(100vw - 20px);
+      height: calc(100vh - 20px);
+    }
+
+    @media (max-width: 900px) {
+      .panels {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <div class="toolbar-section">
+      <!-- Main controls row -->
+      <div class="toolbar-row">
+        <span class="toolbar-label">Space style:</span>
+        <input id="spaceStyleInput" type="number" min="0" max="10" value="0">
+        <span class="toolbar-label">spaces</span>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="spacedAllChk" checked>
+          Spaced all
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="spacedSelectedChk">
+          Spaced selected
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="wordOnlyChk">
+          Word-only spacing
+        </label>
+
+        <button class="btn" id="undoBtn">Undo</button>
+        <button class="btn" id="redoBtn">Redo</button>
+
+        <span class="toolbar-label">Font size:</span>
+        <input type="range" id="fontSizeSlider" min="12" max="32" value="18">
+        <span class="toolbar-label" id="fontSizeValue">18px</span>
+
+        <button class="btn btn-primary" id="startSpacedBtn">▶ Start Spaced</button>
+      </div>
+
+      <!-- Find / Replace row -->
+      <div class="toolbar-row">
+        <span class="toolbar-label">Find:</span>
+        <input type="text" id="findInput" placeholder="Text to find">
+        <span class="toolbar-label">Replace:</span>
+        <input type="text" id="replaceInput" placeholder="Replacement">
+
+        <button class="btn" id="findPrevBtn">Find ↑</button>
+        <button class="btn" id="findNextBtn">Find ↓</button>
+        <button class="btn" id="replaceBtn">Replace</button>
+        <button class="btn" id="replaceAllBtn">Replace All</button>
+      </div>
+
+      <!-- Line operations row (will naturally sit below when split) -->
+      <div class="toolbar-row">
+        <button class="btn" id="splitLinesBtn">Split Lines</button>
+        <button class="btn" id="joinLinesBtn">Join Lines</button>
+        <button class="btn" id="sortAscBtn">Sort Lines Ascending</button>
+        <button class="btn" id="sortDescBtn">Sort Lines Descending</button>
+      </div>
+    </div>
+
+    <div class="panels">
+      <!-- Text Panel -->
+      <div class="panel" id="panel-text">
+        <div class="panel-header">
+          <div class="panel-title">Panel · Text</div>
+          <div class="panel-stats">
+            <span id="charCount">Characters: 0</span>
+            <button class="btn btn-full" data-target="panel-text">Full</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea id="inputText" spellcheck="false"></textarea>
+        </div>
+        <div class="panel-footer">
+          <div class="panel-footer-left">
+            <input type="file" id="importFile" style="display:none">
+            <button class="btn" id="importBtn">Import Text</button>
+            <button class="btn btn-danger" id="clearInputBtn">Clear</button>
+          </div>
+          <div class="panel-footer-right"></div>
+        </div>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="panel" id="panel-results">
+        <div class="panel-header">
+          <div class="panel-title">Panel · Results</div>
+          <div class="panel-stats">
+            <button class="btn btn-full" data-target="panel-results">Full</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea id="results" spellcheck="false"></textarea>
+        </div>
+        <div class="panel-footer">
+          <div class="panel-footer-left">
+            <button class="btn" id="exportBtn">Export Text</button>
+            <button class="btn" id="copyBtn">Copy</button>
+          </div>
+          <div class="panel-footer-right">
+            <button class="btn btn-danger" id="clearResultsBtn">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputText = document.getElementById("inputText");
+    const results = document.getElementById("results");
+    const spaceStyleSelect = document.getElementById("spaceStyleInput");
+    const spacedAllChk = document.getElementById("spacedAllChk");
+    const spacedSelectedChk = document.getElementById("spacedSelectedChk");
+    const wordOnlyChk = document.getElementById("wordOnlyChk");
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
+    const fontSizeSlider = document.getElementById("fontSizeSlider");
+    const fontSizeValue = document.getElementById("fontSizeValue");
+    const startSpacedBtn = document.getElementById("startSpacedBtn");
+    const findPrevBtn = document.getElementById("findPrevBtn");
+    const findNextBtn = document.getElementById("findNextBtn");
+    const findInput = document.getElementById("findInput");
+    const replaceInput = document.getElementById("replaceInput");
+    const replaceBtn = document.getElementById("replaceBtn");
+    const replaceAllBtn = document.getElementById("replaceAllBtn");
+    const splitLinesBtn = document.getElementById("splitLinesBtn");
+    const joinLinesBtn = document.getElementById("joinLinesBtn");
+    const sortAscBtn = document.getElementById("sortAscBtn");
+    const sortDescBtn = document.getElementById("sortDescBtn");
+    const importBtn = document.getElementById("importBtn");
+    const importFile = document.getElementById("importFile");
+    const clearInputBtn = document.getElementById("clearInputBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearResultsBtn = document.getElementById("clearResultsBtn");
+    const charCount = document.getElementById("charCount");
+    const fullscreenButtons = document.querySelectorAll("[data-target]");
+    /* HISTORY (Undo/Redo) */
+    let history = [];
+    let historyIndex = -1;
+
+    function pushHistory() {
+      history = history.slice(0, historyIndex + 1);
+      history.push(inputText.value);
+      historyIndex++;
+    }
+
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        inputText.value = history[historyIndex];
+        updateCharCount();
+        generateResult();
+      }
+    }
+
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        inputText.value = history[historyIndex];
+        updateCharCount();
+        generateResult();
+      }
+    }
+    undoBtn.onclick = undo;
+    redoBtn.onclick = redo;
+    /* CHARACTER COUNT */
+    function updateCharCount() {
+      charCount.textContent = "Characters: " + inputText.value.length;
+    }
+    /* SPACING LOGIC */
+    function applySpacing(text, spacesCount) {
+      if (!text) return "";
+      const spaces = " ".repeat(spacesCount);
+      if (wordOnlyChk.checked) {
+        // spacing between words only
+        return text
+          .split("\n")
+          .map(line => {
+            if (!line) return "";
+            const words = line.split(" ");
+            return words.join(spaces);
+          })
+          .join("\n");
+      } else {
+        // spacing between characters
+        return text
+          .split("\n")
+          .map(line => line.split("").join(spaces))
+          .join("\n");
+      }
+    }
+
+    function generateResult() {
+      const spacesCount = parseInt(spaceStyleSelect.value || "0", 10);
+      const fullText = inputText.value;
+      if (!fullText) {
+        results.value = "";
+        return;
+      }
+      const useAll =
+        spacedAllChk.checked ||
+        (!spacedSelectedChk.checked) ||
+        inputText.selectionStart === inputText.selectionEnd;
+      if (useAll) {
+        results.value = applySpacing(fullText, spacesCount);
+      } else {
+        const start = inputText.selectionStart;
+        const end = inputText.selectionEnd;
+        const before = fullText.slice(0, start);
+        const selected = fullText.slice(start, end);
+        const after = fullText.slice(end);
+        results.value = before + applySpacing(selected, spacesCount) + after;
+      }
+      // auto-scroll results to bottom
+      results.scrollTop = results.scrollHeight;
+    }
+    startSpacedBtn.onclick = () => {
+      generateResult();
+    };
+    // make spacedAll / spacedSelected mutually aware
+    spacedAllChk.addEventListener("change", () => {
+      if (spacedAllChk.checked) spacedSelectedChk.checked = false;
+    });
+    spacedSelectedChk.addEventListener("change", () => {
+      if (spacedSelectedChk.checked) spacedAllChk.checked = false;
+    });
+    /* FONT SIZE */
+    fontSizeSlider.oninput = () => {
+      const size = fontSizeSlider.value + "px";
+      inputText.style.fontSize = size;
+      results.style.fontSize = size;
+      fontSizeValue.textContent = size;
+    };
+    /* CLEAR */
+    clearInputBtn.onclick = () => {
+      inputText.value = "";
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    clearResultsBtn.onclick = () => {
+      results.value = "";
+    };
+    /* IMPORT */
+    importBtn.onclick = () => importFile.click();
+    importFile.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        inputText.value = ev.target.result;
+        updateCharCount();
+        generateResult();
+        pushHistory();
+      };
+      reader.readAsText(file);
+      importFile.value = "";
+    };
+    /* EXPORT */
+    exportBtn.onclick = () => {
+      const textToExport = results.value || "";
+      const blob = new Blob([textToExport], {
+        type: "text/plain;charset=utf-8"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "spaced-text.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+    /* COPY */
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(results.value || "");
+    };
+    /* FULLSCREEN */
+    fullscreenButtons.forEach(btn => {
+      btn.onclick = () => {
+        const targetId = btn.getAttribute("data-target");
+        const panel = document.getElementById(targetId);
+        const isFull = panel.classList.toggle("panel-fullscreen");
+        btn.textContent = isFull ? "Exit" : "Full";
+      };
+    });
+    /* LINE OPS */
+    splitLinesBtn.onclick = () => {
+      inputText.value = inputText.value.replace(/ +/g, "\n");
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    joinLinesBtn.onclick = () => {
+      inputText.value = inputText.value.split("\n").join(" ");
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    sortAscBtn.onclick = () => {
+      const lines = inputText.value.split("\n");
+      lines.sort((a, b) => a.localeCompare(b));
+      inputText.value = lines.join("\n");
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    sortDescBtn.onclick = () => {
+      const lines = inputText.value.split("\n");
+      lines.sort((a, b) => b.localeCompare(a));
+      inputText.value = lines.join("\n");
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    /* FIND / REPLACE */
+    let lastIndex = -1;
+
+    function findNext() {
+      const text = inputText.value;
+      const query = findInput.value;
+      if (!query) return;
+      lastIndex = text.indexOf(query, lastIndex + 1);
+      if (lastIndex === -1) {
+        lastIndex = text.indexOf(query);
+      }
+      if (lastIndex === -1) return;
+      inputText.focus();
+      inputText.setSelectionRange(lastIndex, lastIndex + query.length);
+    }
+
+    function findPrev() {
+      const text = inputText.value;
+      const query = findInput.value;
+      if (!query) return;
+      if (lastIndex === -1) {
+        lastIndex = text.lastIndexOf(query);
+      } else {
+        const before = text.slice(0, lastIndex);
+        lastIndex = before.lastIndexOf(query);
+        if (lastIndex === -1) {
+          lastIndex = text.lastIndexOf(query);
+        }
+      }
+      if (lastIndex === -1) return;
+      inputText.focus();
+      inputText.setSelectionRange(lastIndex, lastIndex + query.length);
+    }
+    findNextBtn.onclick = findNext;
+    findPrevBtn.onclick = findPrev;
+    replaceBtn.onclick = () => {
+      const query = findInput.value;
+      const replacement = replaceInput.value;
+      if (!query) return;
+      inputText.value = inputText.value.replace(query, replacement);
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    replaceAllBtn.onclick = () => {
+      const query = findInput.value;
+      const replacement = replaceInput.value;
+      if (!query) return;
+      const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+      inputText.value = inputText.value.replace(re, replacement);
+      updateCharCount();
+      generateResult();
+      pushHistory();
+    };
+    inputText.oninput = () => {
+      updateCharCount();
+      pushHistory();
+      // auto-scroll input to bottom while typing
+      inputText.scrollTop = inputText.scrollHeight;
+    };
+    // initial state
+    updateCharCount();
+    pushHistory();
+    generateResult();
+  </script>
+</body>
+
+</html>
